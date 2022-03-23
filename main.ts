@@ -67,11 +67,12 @@ canvas.addEventListener('click', (e: PointerEvent) => {
     const {width, height} = canvasRect
     const xVal = e.offsetX / width
     const x = xVal * 2 - 1
-    const y = (e.offsetY / height) * 2 - 1
+    const yVal = (e.offsetY / height)
+    const y = -(yVal * 2 - 1)
 
-    const color = [1 - xVal, 0, xVal, 1]
+    const color = [1 - xVal, yVal, xVal, 1]
 
-    points.push(new PointData([x, -y], color))
+    points.push(new PointData([x, y], color))
 
     render()
 })

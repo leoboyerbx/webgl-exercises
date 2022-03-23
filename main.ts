@@ -1,8 +1,8 @@
 import './style.css'
 // @ts-ignore
-import vertexShaderSource from './vertexShader.glsl'
+import vertexShaderSource from './shaders/vertexShader.glsl'
 // @ts-ignore
-import fragmentShaderSource from './fragmentShader.glsl'
+import fragmentShaderSource from './shaders/fragmentShader.glsl'
 
 const canvas: HTMLCanvasElement = document.querySelector('#canvas')
 const gl = canvas.getContext('webgl')

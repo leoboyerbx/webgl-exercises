@@ -10,12 +10,27 @@ const gl = canvas.getContext('webgl')
 gl.clearColor(0, 0, 0, 1)
 gl.clear(gl.COLOR_BUFFER_BIT)
 
-const loadShader = (gl, source, type) => {
-    const shader = gl.createShader(type)
-    gl.shaderSource(shader, source)
-    gl.compileShader(shader)
-    return shader
+function loadShader(gl, source, type) {
+    const shader = gl.createShader(type);
+
+    // Envoyer le source à l'objet shader
+
+    gl.shaderSource(shader, source);
+
+    // Compiler le programme shader
+
+    gl.compileShader(shader);
+
+    // Vérifier s'il a ét compilé avec succès
+
+    if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+        console.error('An error occurred compiling the shaders: ' + gl.getShaderInfoLog(shader));
+        gl.deleteShader(shader);
+        return null;
+    }
+    return shader;
 }
+
 class PointData {
     public coords: Array<number>
     public color: Array<number>
@@ -50,12 +65,11 @@ const render = () => {
 const canvasRect = canvas.getBoundingClientRect()
 canvas.addEventListener('click', (e: PointerEvent) => {
     const {width, height} = canvasRect
-    const x = (e.offsetX / width) * 2 - 1
+    const xVal = e.offsetX / width
+    const x = xVal * 2 - 1
     const y = (e.offsetY / height) * 2 - 1
 
-    const color = x > 0
-        ? [1, 0, 0, 1]
-        : [0, 0, 1, 1]
+    const color = [1 - xVal, 0, xVal, 1]
 
     points.push(new PointData([x, -y], color))
 

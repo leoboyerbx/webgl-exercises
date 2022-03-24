@@ -5,17 +5,8 @@
  * When the center of the point is on the left half of the canvas, the points is red
  * When the center of the point is on the right half of the canvas, the points is blue
  */
-
-// Keep the WebGL context global to make code easier to read
-import WebGLShaderUtils from './lib/webgl-shader-utils'
-import { createWebGLHelpers } from './lib/webgl-helpers'
-import WebGLUtils from './lib/webgl-utils'
-
-let gl
-
 // Use only one global context object to keep code clear
 let points = []
-let helpers
 
 class Point
 {
@@ -80,12 +71,12 @@ class Point
 
         // Get all attributes locations
         // This will allow to set the values from the javascript code with the gl.vertexAttrib function
-        this.attributes.position = helpers.getAttributeLocation(this.program, "aPosition")
-        this.attributes.pointSize = helpers.getAttributeLocation(this.program, "aPointSize")
+        this.attributes.position = getAttributeLocation(this.program, "aPosition")
+        this.attributes.pointSize = getAttributeLocation(this.program, "aPointSize")
 
         // Get all uniforms locations
         // This will allow to set the values from the javascript code with the gl.uniform function
-        this.uniforms.color = helpers.getUniformLocation(this.program, "uColor")
+        this.uniforms.color = getUniformLocation(this.program, "uColor")
     }
 
     draw()
@@ -103,9 +94,8 @@ class Point
 function init()
 {
     const canvas = document.getElementById("canvas")
-    gl = WebGLUtils.setupWebGL(canvas)
+    window.gl = WebGLUtils.setupWebGL(canvas)
     console.log(gl)
-    helpers = createWebGLHelpers(gl)
 
     // Set the default value of the color buffer
     gl.clearColor(0.0, 0.0, 0.0, 1.0)

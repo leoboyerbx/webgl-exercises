@@ -54,17 +54,19 @@ class Triangle
 
         gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexBuffer)
 
+        const stride = 5 * this.vertexBufferBPE
         gl.vertexAttribPointer(this.attributes.position,
             2,
             gl.FLOAT,
             false,
-            5 * this.vertexBufferBPE,
-            0)
+            stride,
+            0
+        )
         gl.vertexAttribPointer(this.attributes.color,
             3,
             gl.FLOAT,
             false,
-            5 * this.vertexBufferBPE,
+            stride,
             2 * this.vertexBufferBPE
         )
         gl.enableVertexAttribArray(this.attributes.position)

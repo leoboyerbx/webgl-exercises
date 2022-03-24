@@ -1,5 +1,6 @@
 precision mediump float;
 void main() {
- vec3 color = vec3(0.0, gl_PointCoord.xy);
- gl_FragColor = vec4(color.brg, 1.0);
+ float d = distance(vec2(0.5, 0.5), gl_PointCoord.xy);
+ vec3 color = (1.0 - smoothstep(0.2, 0.5, d) ) * vec3(1.0, 0.0, 0.0);
+ gl_FragColor = vec4(color, 1.0);
 }

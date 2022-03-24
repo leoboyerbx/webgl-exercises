@@ -10,11 +10,25 @@ const gl = canvas.getContext('webgl')
 gl.clearColor(0, 0, 0, 1)
 gl.clear(gl.COLOR_BUFFER_BIT)
 
-const loadShader = (gl, source, type) => {
-    const shader = gl.createShader(type)
-    gl.shaderSource(shader,  source)
-    gl.compileShader(shader)
-    return shader
+function loadShader(gl, source, type) {
+    const shader = gl.createShader(type);
+
+    // Envoyer le source à l'objet shader
+
+    gl.shaderSource(shader, source);
+
+    // Compiler le programme shader
+
+    gl.compileShader(shader);
+
+    // Vérifier s'il a ét compilé avec succès
+
+    if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+        console.error('An error occurred compiling the shaders: ' + gl.getShaderInfoLog(shader));
+        gl.deleteShader(shader);
+        return null;
+    }
+    return shader;
 }
 
 const vShader = loadShader(gl, vertexShaderSource, gl.VERTEX_SHADER)

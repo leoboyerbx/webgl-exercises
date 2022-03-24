@@ -3,12 +3,12 @@ import fragmentShader from './shaders/fragmentShader.glsl'
 
 class Triangle
 {
-    constructor(color)
+    constructor(size, color)
     {
         this.coords = new Float32Array([
-             0, 0.5,
-            -0.5, -0.5,
-             0.5, -0.5
+             0, size,
+            -size, -size,
+             size, -size
         ])
 
         this.color = color
@@ -81,9 +81,12 @@ function draw()
 {
     // Clear the color buffer before drawing all the points
     gl.clear(gl.COLOR_BUFFER_BIT)
-    const triangle = new Triangle([1, 0, 0])
+
+    const triangle = new Triangle(0.5, [1, 0, 0])
     triangle.draw()
+    const triangle2 = new Triangle(0.2, [0, 0, 1])
+    triangle2.draw()
 
 }
 init()
-draw()
+draw(0)

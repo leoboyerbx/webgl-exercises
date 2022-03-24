@@ -1,0 +1,181 @@
+<!doctype html>
+
+<html>
+
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+
+        <meta name="author" content="Yann Gilquin">
+        <meta name="description" content="Formation WebGL - Draw a point with mouse - wrong framebuffer usage">
+
+        <title>Draw a point with mouse - wrong framebuffer usage</title>
+
+        <style>
+            html, body {
+                background-color: #202020;
+                margin: 0px;
+                overflow: hidden;
+                width: 100%;
+                height: 100%;
+            }
+
+            canvas {
+                width: 400px;
+                height: 400px;
+                margin: 50px;
+                touch-action: none;
+            }
+        </style>
+
+        <script type="text/javascript" src="../lib/webgl-utils.js"></script>
+        <script type="text/javascript" src="../lib/webgl-shader-utils.js"></script>
+        <script type="text/javascript" src="../lib/webgl-helpers.js"></script>
+    </head>
+
+    <body>
+        <canvas id="canvas" width="400" height="400"></canvas>
+
+        <script>
+            /*
+             * Draw points under mouse clicks
+             *
+             * Convert the mouse event coordinates into canvas space, and into clip space
+             * Use the clip space point to set the vertex attribute and draw the point
+             * This should work... almost !
+             */
+
+            // Keep the WebGL context global to make code easier to read
+            let gl
+
+            class Point
+            {
+                constructor(x, y, size, color)
+                {
+                    this.x = x
+                    this.y = y
+                    this.size = size
+                    this.color = color
+
+                    this.program = null
+                    this.attributes = {}
+                    this.uniforms = {}
+
+                    this.initProgram()
+                }
+
+                static get vertexShader()
+                {
+                    return WebGLShaderUtils.shaderArrayToString([
+                        "attribute vec2 aPosition;",
+                        "attribute float aPointSize;",
+                        "",
+                        "void main()",
+                        "{",
+                        // gl_Position is a vec4 value in clip space (-1 .. +1)
+                        "   gl_Position = vec4(aPosition, 0.0, 1.0);",
+
+                        // gl_PointSize should be set with a value in pixels
+                        "   gl_PointSize = aPointSize;",
+                        "}"
+                    ])
+                }
+
+                static get fragmentShader()
+                {
+                    return WebGLShaderUtils.shaderArrayToString([
+                        "precision mediump float;",
+                        "",
+                        "uniform vec3 uColor;",
+                        "",
+                        "void main()",
+                        "{",
+                        // The fragment color has 4 channels (r, g, b, a)
+                        "   gl_FragColor = vec4(uColor, 1.0);",
+                        "}"
+                    ])
+                }
+
+                initProgram()
+                {
+                    // Create the program with shader code
+                    this.program = WebGLShaderUtils.createProgram(gl, Point.vertexShader, Point.fragmentShader)
+
+                    // Use the program to allow access to attributes and uniforms location                    
+                    gl.useProgram(this.program)
+
+                    // Get all attributes locations
+                    // This will allow to set the values from the javascript code with the gl.vertexAttrib function
+                    this.attributes.position = getAttributeLocation(this.program, "aPosition")
+                    this.attributes.pointSize = getAttributeLocation(this.program, "aPointSize")
+                    
+                    // Get all uniforms locations
+                    // This will allow to set the values from the javascript code with the gl.uniform function
+                    this.uniforms.color = getUniformLocation(this.program, "uColor")
+                }
+
+                draw()
+                {
+                    gl.useProgram(this.program)
+
+                    gl.vertexAttrib1f(this.attributes.pointSize, this.size)
+                    gl.vertexAttrib2f(this.attributes.position, this.x, this.y)
+                    gl.uniform3fv(this.uniforms.color, this.color)
+
+                    gl.drawArrays(gl.POINTS, 0, 1)
+                }
+            }
+    
+            function init()
+            {
+                const canvas = document.getElementById("canvas")
+                gl = WebGLUtils.setupWebGL(canvas)
+
+                // Set the default value of the color buffer
+                gl.clearColor(0.0, 0.0, 0.0, 1.0)
+
+                // Clear the color buffer
+                gl.clear(gl.COLOR_BUFFER_BIT)
+            }
+
+            /*
+             * Draw a point
+             * Use the 2D clip space coordinate of the point under mouse click to set
+             * the vertex shader position attribute
+             * Set the point size attribute with some fixed value
+             *
+             * Set the uniform color value for the fragment shader depending on the
+             * x-axis value, red points on the left half, blue points on the right half
+             */
+            function drawPoint(point)
+            {
+                point.draw()
+            }
+
+            /*
+             * Click handler
+             * Convert mouse click coordinates from the canvas space into clip space
+             * Draw point
+             */
+            function click(event)
+            {
+                const rect = event.target.getBoundingClientRect()
+
+                let xClip = (2 * (event.clientX - rect.left) / rect.width) - 1
+                let yClip = -((2 * (event.clientY - rect.top) / rect.height) - 1)
+
+                let color = xClip < 0 ? [1.0, 0.0, 0.0] : [0.0, 0.0, 1.0]
+                let point = new Point(xClip, yClip, 10, color)
+
+                // Call the draw point function with the new point
+                drawPoint(point)
+            }
+
+            init()
+            canvas.onmouseup = click
+
+        </script>
+
+    </body>
+
+</html>

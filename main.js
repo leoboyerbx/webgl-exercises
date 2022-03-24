@@ -1,7 +1,7 @@
 import vertexShader from './shaders/vertexShader.glsl'
 import fragmentShader from './shaders/fragmentShader.glsl'
 
-class Triangle
+class Rectangle
 {
     constructor(width, height, color)
     {
@@ -9,9 +9,7 @@ class Triangle
             -width, height,       1, 0, 0,
             -width, -height,   0, 1, 0,
             width, -height,   0, 0, 1,
-            -width, height,  1, 0, 0,
             width, height,   1, 1, 1,
-            width, -height,   0, 0, 1,
         ])
 
         this.color = color
@@ -79,7 +77,7 @@ class Triangle
         // gl.enableVertexAttribArray(this.attributes.color)
         // gl.uniform3fv(this.uniforms.color, this.color)
 
-        gl.drawArrays(gl.TRIANGLES, 0, 6)
+        gl.drawElements(gl.TRIANGLES, 4, gl.UNSIGNED_BYTE, 0)
     }
 }
 
@@ -104,7 +102,7 @@ function draw()
     // Clear the color buffer before drawing all the points
     gl.clear(gl.COLOR_BUFFER_BIT)
 
-    const triangle = new Triangle(0.8, 0.6, [1, 0, 0])
+    const triangle = new Rectangle(0.8, 0.6, [1, 0, 0])
     triangle.draw()
     // const triangle2 = new Triangle(0.2, [0, 0, 1])
     // triangle2.draw()

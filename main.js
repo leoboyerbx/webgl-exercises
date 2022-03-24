@@ -3,7 +3,7 @@ import fragmentShader from './shaders/fragmentShader.glsl'
 
 class Triangle
 {
-    constructor(size, color, lumi)
+    constructor(size, color)
     {
         this.coords = new Float32Array([
              0, size,       1, 0, 0,
@@ -14,9 +14,14 @@ class Triangle
         this.color = color
 
         this.program = null
-        this.attributes = {}
-        this.uniforms = {}
-        this.lumi = lumi
+        this.attributes = {
+            position : null,
+            color : null,
+        }
+        this.uniforms = {
+            animation: null
+        }
+        this.animation = 0
 
         this.vertexBuffer = null
 
@@ -24,8 +29,8 @@ class Triangle
         this.initGeometry()
     }
 
-    setLuminance(lumi) {
-        this.lumi = lumi
+    setAnimation(a) {
+        this.animation = a
     }
 
     initProgram()
@@ -40,7 +45,7 @@ class Triangle
         // This will allow to set the values from the javascript code with the gl.vertexAttrib function
         this.attributes.position = getAttributeLocation(this.program, "aPosition")
         this.attributes.color = getAttributeLocation(this.program, "aColor")
-        this.uniforms.luminance = getUniformLocation(this.program, "uLuminance")
+        this.uniforms.animation = getUniformLocation(this.program, "uAnimation")
 
         // Get all uniforms locations
         // This will allow to set the values from the javascript code with the gl.uniform function
@@ -77,7 +82,7 @@ class Triangle
         gl.enableVertexAttribArray(this.attributes.position)
         gl.enableVertexAttribArray(this.attributes.color)
 
-        gl.uniform1f(this.uniforms.luminance, this.lumi)
+        gl.uniform1f(this.uniforms.animation, this.animation)
 
         // gl.vertexAttribPointer(this.attributes.color, 3, gl.FLOAT, false, 0, 2)
         // gl.enableVertexAttribArray(this.attributes.color)
@@ -103,22 +108,27 @@ function init()
 /*
  * Draw all the points stored in the array
  */
+let triangle
 function draw()
 {
     // Clear the color buffer before drawing all the points
-    gl.clear(gl.COLOR_BUFFER_BIT)
 
     /**
      *  Si Pi -> un demi tour donc 5 secondes pour un aller
      *  Si PI * 2 -> un tour donc 5 secondes pour un aller retour
      */
-    const lum = (Math.sin(Date.now() / 5000 * Math.PI)) * 0.5 + 0.5
     // console.log(lum)
-    const triangle = new Triangle(0.5, [1, 0, 0], lum)
-    triangle.draw()
+    triangle = new Triangle(0.5, [1, 0, 0])
     // const triangle2 = new Triangle(0.2, [0, 0, 1])
     // triangle2.draw()
-    requestAnimationFrame(draw)
+    loop()
+}
+function loop() {
+    gl.clear(gl.COLOR_BUFFER_BIT)
+    const lum = Math.sin((Date.now() * Math.PI * 2) / 5000) * 0.5 + 0.5
+    triangle.setAnimation(lum)
+    triangle.draw()
+    requestAnimationFrame(loop)
 }
 init()
 draw(0)

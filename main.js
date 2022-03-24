@@ -3,9 +3,13 @@ import fragmentShader from './shaders/fragmentShader.glsl'
 
 class Triangle
 {
-    constructor(coords, color)
+    constructor(size, color)
     {
-        this.coords = new Float32Array(coords)
+        this.coords = new Float32Array([
+             0, size,       1, 0, 0,
+            -size, -size,   0, 1, 0,
+             size, -size,   0, 0, 1,
+        ])
 
         this.color = color
 
@@ -30,13 +34,15 @@ class Triangle
         // Get all attributes locations
         // This will allow to set the values from the javascript code with the gl.vertexAttrib function
         this.attributes.position = getAttributeLocation(this.program, "aPosition")
+        this.attributes.color = getAttributeLocation(this.program, "aColor")
 
         // Get all uniforms locations
         // This will allow to set the values from the javascript code with the gl.uniform function
-        this.uniforms.color = getUniformLocation(this.program, "uColor")
+        // this.uniforms.color = getUniformLocation(this.program, "uColor")
     }
 
     initGeometry() {
+        this.vertexBufferBPE = this.coords.BYTES_PER_ELEMENT
         this.vertexBuffer = gl.createBuffer()
         gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexBuffer)
         gl.bufferData(gl.ARRAY_BUFFER, this.coords, gl.STATIC_DRAW)
@@ -48,10 +54,25 @@ class Triangle
 
         gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexBuffer)
 
-        gl.vertexAttribPointer(this.attributes.position, 2, gl.FLOAT, false, 0, 0)
+        gl.vertexAttribPointer(this.attributes.position,
+            2,
+            gl.FLOAT,
+            false,
+            5 * this.vertexBufferBPE,
+            0)
+        gl.vertexAttribPointer(this.attributes.color,
+            3,
+            gl.FLOAT,
+            false,
+            5 * this.vertexBufferBPE,
+            2 * this.vertexBufferBPE
+        )
         gl.enableVertexAttribArray(this.attributes.position)
+        gl.enableVertexAttribArray(this.attributes.color)
 
-        gl.uniform3fv(this.uniforms.color, this.color)
+        // gl.vertexAttribPointer(this.attributes.color, 3, gl.FLOAT, false, 0, 2)
+        // gl.enableVertexAttribArray(this.attributes.color)
+        // gl.uniform3fv(this.uniforms.color, this.color)
 
         gl.drawArrays(gl.TRIANGLES, 0, 3)
     }
@@ -78,25 +99,11 @@ function draw()
     // Clear the color buffer before drawing all the points
     gl.clear(gl.COLOR_BUFFER_BIT)
 
-}
+    const triangle = new Triangle(0.5, [1, 0, 0])
+    triangle.draw()
+    // const triangle2 = new Triangle(0.2, [0, 0, 1])
+    // triangle2.draw()
 
-let coords = []
-
-function click(event)
-{
-    const rect = event.target.getBoundingClientRect()
-
-    let xClip = (2 * (event.clientX - rect.left) / rect.width) - 1
-    let yClip = -((2 * (event.clientY - rect.top) / rect.height) - 1)
-
-    coords.push(xClip)
-    coords.push(yClip)
-    if (coords.length === 6) {
-        const triangle = new Triangle(coords, [1, 0, 0])
-        triangle.draw()
-        coords = []
-    }
 }
 init()
 draw(0)
-canvas.onclick = click

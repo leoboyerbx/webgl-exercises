@@ -1,0 +1,92 @@
+<!doctype html>
+
+<html>
+
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+
+        <meta name="author" content="Yann Gilquin">
+        <meta name="description" content="Formation WebGL - Animation loop">
+        
+        <title>Animation loop</title>
+
+        <style>
+            html, body {
+                background-color: #202020;
+                margin: 0px;
+                overflow: hidden;
+                width: 100%;
+                height: 100%;
+            }
+
+            canvas {
+                width: 100%;
+                height: 100%;
+                touch-action: none;
+            }
+        </style>
+
+    </head>
+
+    <body>
+        <script>
+            /*
+             * Create an animation loop with setTimeout and
+             * requestAnimationFrame methods
+             * Log frame duration and current fps
+             */
+
+            // Global context object
+            let context = {
+                animation: {
+                    frame: 0, // frame counter
+                    lastTS: 0, // last frame timestamp
+                    elapsed: 0 // elapsed time
+                }
+            }
+
+            function updateAnimationInfo()
+            {
+                // Get current timestamp (ms)
+                let now = Date.now()
+
+                // Compute delta with previous frame (ms)
+                let delta = now - context.animation.lastTS
+
+                // Update animation information
+                context.animation.lastTS = now
+                context.animation.elapsed += delta
+
+                // Update frame counter
+                context.animation.frame++
+                
+                // Compute instant fps
+                let fps = 1000 / delta
+
+                console.log("Animation loop (frame " + context.animation.frame + " : " + delta + "ms) - " + fps.toFixed() + " fps")
+            }
+
+            function animate()
+            {
+                //window.setTimeout(animate, 1000 / 60)
+
+                // https://developer.mozilla.org/fr/docs/Web/API/Window/requestAnimationFrame
+                window.requestAnimationFrame(animate)
+
+                updateAnimationInfo()
+            }
+
+            // Init animation context
+            context.animation.frame = 0
+            context.animation.elapsed = 0
+            context.animation.lastTS = Date.now()
+
+            // Start animation
+            animate();
+
+        </script>
+
+    </body>
+
+</html>

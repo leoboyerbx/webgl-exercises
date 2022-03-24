@@ -3,7 +3,7 @@ import fragmentShader from './shaders/fragmentShader.glsl'
 
 class Triangle
 {
-    constructor(size, color)
+    constructor(size, color, lumi)
     {
         this.coords = new Float32Array([
              0, size,       1, 0, 0,
@@ -16,11 +16,16 @@ class Triangle
         this.program = null
         this.attributes = {}
         this.uniforms = {}
+        this.lumi = lumi
 
         this.vertexBuffer = null
 
         this.initProgram()
         this.initGeometry()
+    }
+
+    setLuminance(lumi) {
+        this.lumi = lumi
     }
 
     initProgram()
@@ -35,6 +40,7 @@ class Triangle
         // This will allow to set the values from the javascript code with the gl.vertexAttrib function
         this.attributes.position = getAttributeLocation(this.program, "aPosition")
         this.attributes.color = getAttributeLocation(this.program, "aColor")
+        this.uniforms.luminance = getUniformLocation(this.program, "uLuminance")
 
         // Get all uniforms locations
         // This will allow to set the values from the javascript code with the gl.uniform function
@@ -51,7 +57,6 @@ class Triangle
     draw()
     {
         gl.useProgram(this.program)
-
         gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexBuffer)
 
         const stride = 5 * this.vertexBufferBPE
@@ -71,6 +76,8 @@ class Triangle
         )
         gl.enableVertexAttribArray(this.attributes.position)
         gl.enableVertexAttribArray(this.attributes.color)
+
+        gl.uniform1f(this.uniforms.luminance, this.lumi)
 
         // gl.vertexAttribPointer(this.attributes.color, 3, gl.FLOAT, false, 0, 2)
         // gl.enableVertexAttribArray(this.attributes.color)
@@ -101,11 +108,17 @@ function draw()
     // Clear the color buffer before drawing all the points
     gl.clear(gl.COLOR_BUFFER_BIT)
 
-    const triangle = new Triangle(0.5, [1, 0, 0])
+    /**
+     *  Si Pi -> un demi tour donc 5 secondes pour un aller
+     *  Si PI * 2 -> un tour donc 5 secondes pour un aller retour
+     */
+    const lum = (Math.sin(Date.now() / 5000 * Math.PI)) * 0.5 + 0.5
+    // console.log(lum)
+    const triangle = new Triangle(0.5, [1, 0, 0], lum)
     triangle.draw()
     // const triangle2 = new Triangle(0.2, [0, 0, 1])
     // triangle2.draw()
-
+    requestAnimationFrame(draw)
 }
 init()
 draw(0)

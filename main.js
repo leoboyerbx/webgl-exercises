@@ -3,13 +3,9 @@ import fragmentShader from './shaders/fragmentShader.glsl'
 
 class Triangle
 {
-    constructor(size, color)
+    constructor(coords, color)
     {
-        this.coords = new Float32Array([
-             0, size,
-            -size, -size,
-             size, -size
-        ])
+        this.coords = new Float32Array(coords)
 
         this.color = color
 
@@ -82,11 +78,25 @@ function draw()
     // Clear the color buffer before drawing all the points
     gl.clear(gl.COLOR_BUFFER_BIT)
 
-    const triangle = new Triangle(0.5, [1, 0, 0])
-    triangle.draw()
-    const triangle2 = new Triangle(0.2, [0, 0, 1])
-    triangle2.draw()
+}
 
+let coords = []
+
+function click(event)
+{
+    const rect = event.target.getBoundingClientRect()
+
+    let xClip = (2 * (event.clientX - rect.left) / rect.width) - 1
+    let yClip = -((2 * (event.clientY - rect.top) / rect.height) - 1)
+
+    coords.push(xClip)
+    coords.push(yClip)
+    if (coords.length === 6) {
+        const triangle = new Triangle(coords, [1, 0, 0])
+        triangle.draw()
+        coords = []
+    }
 }
 init()
 draw(0)
+canvas.onclick = click

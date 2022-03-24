@@ -31,6 +31,7 @@ class Triangle
 
     setAnimation(a) {
         this.animation = a
+        gl.uniform1f(this.uniforms.animation, this.animation)
     }
 
     initProgram()
@@ -81,8 +82,6 @@ class Triangle
         )
         gl.enableVertexAttribArray(this.attributes.position)
         gl.enableVertexAttribArray(this.attributes.color)
-
-        gl.uniform1f(this.uniforms.animation, this.animation)
 
         // gl.vertexAttribPointer(this.attributes.color, 3, gl.FLOAT, false, 0, 2)
         // gl.enableVertexAttribArray(this.attributes.color)

@@ -1,11 +1,7 @@
 attribute vec2 aPosition;
 
-uniform vec2 uTranslate;
-uniform float uScale;
+uniform mat4 uTransform;
 
-void main()
-{
-    // Compute gl_Position in clip space, taking scale and translate into account
-    // ..
-    gl_Position =  vec4(aPosition.xy * uScale + uTranslate, 0.0, 1.0);
+void main() {
+    gl_Position = uTransform * vec4(aPosition, 0.0, 1.0);
 }

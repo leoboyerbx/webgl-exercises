@@ -1,15 +1,13 @@
 import vertexShader from './shaders/vertexShader.glsl'
 import fragmentShader from './shaders/fragmentShader.glsl'
 
-class Rectangle
-{
-    constructor(width, height, color)
-    {
+class Rectangle {
+    constructor(width, height, color) {
         this.coords = new Float32Array([
-            -width, height,       1, 0, 0,
-            -width, -height,   0, 1, 0,
-            width, -height,   0, 0, 1,
-            width, height,   1, 1, 1,
+            -width, height, 1, 0, 0,
+            -width, -height, 0, 1, 0,
+            width, -height, 0, 0, 1,
+            width, height, 1, 1, 1,
         ])
 
         this.color = color
@@ -24,8 +22,7 @@ class Rectangle
         this.initGeometry()
     }
 
-    initProgram()
-    {
+    initProgram() {
         // Create the program with shader code
         this.program = WebGLShaderUtils.createProgram(gl, vertexShader, fragmentShader)
 
@@ -47,10 +44,14 @@ class Rectangle
         this.vertexBuffer = gl.createBuffer()
         gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexBuffer)
         gl.bufferData(gl.ARRAY_BUFFER, this.coords, gl.STATIC_DRAW)
+
+        const indices = new Uint8Array([0, 1, 3, 1, 3, 2])
+        this.indexBuffer = gl.createBuffer()
+        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.indexBuffer)
+        gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, indices, gl.STATIC_DRAW)
     }
 
-    draw()
-    {
+    draw() {
         gl.useProgram(this.program)
 
         gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexBuffer)
@@ -63,6 +64,11 @@ class Rectangle
             stride,
             0
         )
+
+        const colorIndices = new Uint8Array([0, 1, 3, 1, 3, 2])
+        this.colorBuffer = gl.createBuffer()
+        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.colorBuffer)
+        gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, colorIndices, gl.STATIC_DRAW)
         gl.vertexAttribPointer(this.attributes.color,
             3,
             gl.FLOAT,
@@ -77,12 +83,11 @@ class Rectangle
         // gl.enableVertexAttribArray(this.attributes.color)
         // gl.uniform3fv(this.uniforms.color, this.color)
 
-        gl.drawElements(gl.TRIANGLES, 4, gl.UNSIGNED_BYTE, 0)
+        gl.drawElements(gl.TRIANGLES, 6, gl.UNSIGNED_BYTE, 0)
     }
 }
 
-function init()
-{
+function init() {
     const canvas = document.getElementById("canvas")
     window.gl = WebGLUtils.setupWebGL(canvas)
     console.log(gl)
@@ -97,8 +102,7 @@ function init()
 /*
  * Draw all the points stored in the array
  */
-function draw()
-{
+function draw() {
     // Clear the color buffer before drawing all the points
     gl.clear(gl.COLOR_BUFFER_BIT)
 
@@ -108,5 +112,6 @@ function draw()
     // triangle2.draw()
 
 }
+
 init()
 draw(0)

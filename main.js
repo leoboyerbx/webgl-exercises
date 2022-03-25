@@ -1,16 +1,23 @@
 import vertexShader from './shaders/vertexShader.glsl'
 import fragmentShader from './shaders/fragmentShader.glsl'
 
-class Rectangle {
-    constructor(width, height, color) {
-        this.coords = new Float32Array([
-            -width, height, 1, 0, 0,
-            -width, -height, 0, 1, 0,
-            width, -height, 0, 0, 1,
-            width, height, 1, 1, 1,
-        ])
-
-        this.color = color
+class Polygon {
+    constructor(radius, sides) {
+        this.sides = sides
+        const coords = [
+            0, 0, 1, 0, 0
+        ]
+        for (let i = 0; i < sides; i++) {
+            const angle = (i * 2 * Math.PI) / sides
+            const x = radius * Math.cos(angle)
+            const y = radius * Math.sin(angle)
+            coords.push(
+                x, //x
+                y,//y
+                1, 0, 0 // color
+            )
+        }
+        this.coords = new Float32Array(coords)
 
         this.program = null
         this.attributes = {}
@@ -45,7 +52,16 @@ class Rectangle {
         gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexBuffer)
         gl.bufferData(gl.ARRAY_BUFFER, this.coords, gl.STATIC_DRAW)
 
-        const indices = new Uint8Array([0, 1, 3, 1, 3, 2])
+        const buildIndices = []
+        for(let i = 0; i < this.sides; i++) {
+            const isLastIteration = i === this.sides - 1
+            buildIndices.push(
+                0,
+                i + 1,
+                isLastIteration ? 1 : i + 2
+            )
+        }
+        const indices = new Uint8Array(buildIndices)
         this.indexBuffer = gl.createBuffer()
         gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.indexBuffer)
         gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, indices, gl.STATIC_DRAW)
@@ -64,11 +80,6 @@ class Rectangle {
             stride,
             0
         )
-
-        const colorIndices = new Uint8Array([0, 1, 3, 1, 3, 2])
-        this.colorBuffer = gl.createBuffer()
-        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.colorBuffer)
-        gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, colorIndices, gl.STATIC_DRAW)
         gl.vertexAttribPointer(this.attributes.color,
             3,
             gl.FLOAT,
@@ -83,7 +94,7 @@ class Rectangle {
         // gl.enableVertexAttribArray(this.attributes.color)
         // gl.uniform3fv(this.uniforms.color, this.color)
 
-        gl.drawElements(gl.TRIANGLES, 6, gl.UNSIGNED_BYTE, 0)
+        gl.drawElements(gl.TRIANGLES, 3 * this.sides, gl.UNSIGNED_BYTE, 0)
     }
 }
 
@@ -106,8 +117,8 @@ function draw() {
     // Clear the color buffer before drawing all the points
     gl.clear(gl.COLOR_BUFFER_BIT)
 
-    const triangle = new Rectangle(0.8, 0.6, [1, 0, 0])
-    triangle.draw()
+    const poly = new Polygon(0.5, 6)
+    poly.draw()
     // const triangle2 = new Triangle(0.2, [0, 0, 1])
     // triangle2.draw()
 

@@ -1,11 +1,11 @@
 attribute vec2 aPosition;
-attribute vec3 aColor;
 
-uniform float uAnimation;
+uniform vec2 uTranslate;
+uniform float uScale;
 
-varying vec3 vColor;
-
-void main() {
- gl_Position = vec4(aPosition, 0.0, 1.0);
- vColor = uAnimation * aColor;
+void main()
+{
+    // Compute gl_Position in clip space, taking scale and translate into account
+    // ..
+    gl_Position =  vec4(aPosition.xy * uScale + uTranslate, 0.0, 1.0);
 }

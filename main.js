@@ -1,133 +1,233 @@
+import dat from'dat.gui'
 import vertexShader from './shaders/vertexShader.glsl'
 import fragmentShader from './shaders/fragmentShader.glsl'
+/*
+ * Draw a triangle and apply transforms values with a GUI
+ * in clip space (translate and scale)
+ */
 
+// Keep the WebGL context global to make code easier to read
+
+// Use only one global context object to keep code clear
+let context = {
+    triangle: null,
+    animation:
+        {
+            period: 10,
+            phase: 0
+        },
+    paramsDef: null,
+    params: null,
+    gui: null
+}
+
+/*
+ * Graphical User In terface params class
+ * Define params to control runtime properties
+ */
+context.paramsDef = class {
+    constructor() {
+        this.scale = 1
+        this.translateX = 0
+        this.translateY = 0
+    }
+}
+
+/*
+ * Create GUI and params instances
+ * Setup the interface with property association
+ */
+context.params = new context.paramsDef()
+context.gui = new dat.GUI()
+
+let transform = context.gui.addFolder("Clip space transform")
+transform.open()
+transform.add(context.params, 'scale', 0.01, 2)
+transform.add(context.params, 'translateX', -1, 1)
+transform.add(context.params, 'translateY', -1, 1)
+
+/*
+ * Triangle class
+ * Implement API methods to set scale and position in clip space
+ */
 class Triangle
 {
-    constructor(size, color)
+    constructor(color)
     {
-        this.coords = new Float32Array([
-             0, size,       1, 0, 0,
-            -size, -size,   0, 1, 0,
-             size, -size,   0, 0, 1,
-        ])
-
         this.color = color
 
+        /*
+         * Program and shaders definitions
+         */
         this.program = null
-        this.attributes = {
-            position : null,
-            color : null,
-        }
-        this.uniforms = {
-            animation: null
-        }
-        this.animation = 0
+        this.uniforms = {}
+        this.attributes = {}
 
+        /*
+         * Geometry definitions
+         */
         this.vertexBuffer = null
 
+        /*
+         * Init program and geometry
+         */
         this.initProgram()
         this.initGeometry()
+
+        /*
+         * Transform definition
+         */
+        this.transform = {
+            scale: 1,
+            position: new Vector2D(0, 0)
+        }
     }
 
-    setAnimation(a) {
-        this.animation = a
-        gl.uniform1f(this.uniforms.animation, this.animation)
+    static get vertexShader()
+    {
+        return vertexShader
+    }
+
+    static get fragmentShader()
+    {
+        return fragmentShader
     }
 
     initProgram()
     {
         // Create the program with shader code
-        this.program = WebGLShaderUtils.createProgram(gl, vertexShader, fragmentShader)
+        this.program = WebGLShaderUtils.createProgram(gl, Triangle.vertexShader, Triangle.fragmentShader)
 
         // Use the program to allow access to attributes and uniforms location
         gl.useProgram(this.program)
 
         // Get all attributes locations
-        // This will allow to set the values from the javascript code with the gl.vertexAttrib function
-        this.attributes.position = getAttributeLocation(this.program, "aPosition")
-        this.attributes.color = getAttributeLocation(this.program, "aColor")
-        this.uniforms.animation = getUniformLocation(this.program, "uAnimation")
+        this.attributes.position = WebGLHelpers.getAttributeLocation(this.program, "aPosition")
 
         // Get all uniforms locations
-        // This will allow to set the values from the javascript code with the gl.uniform function
-        // this.uniforms.color = getUniformLocation(this.program, "uColor")
+        this.uniforms.color = WebGLHelpers.getUniformLocation(this.program, "uColor")
+
+        this.uniforms.scale = WebGLHelpers.getUniformLocation(this.program, "uScale")
+
+        this.uniforms.translate = WebGLHelpers.getUniformLocation(this.program, "uTranslate")
     }
 
-    initGeometry() {
-        this.vertexBufferBPE = this.coords.BYTES_PER_ELEMENT
+    initGeometry()
+    {
+        // Positions definition (2D clip space)
+        const positions = new Float32Array([
+            -0.5, -0.5,
+            0.0,  0.5,
+            0.5, -0.5
+        ]);
+
+        // Create the vertex buffer
         this.vertexBuffer = gl.createBuffer()
+
+        // Bind the new buffer to the ARRAY BUFFER
         gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexBuffer)
-        gl.bufferData(gl.ARRAY_BUFFER, this.coords, gl.STATIC_DRAW)
+
+        // Set positions data into the buffer
+        gl.bufferData(gl.ARRAY_BUFFER, positions, gl.STATIC_DRAW)
+    }
+
+    /*
+     * Set scale value (clip space)
+     */
+    setScale(scale)
+    {
+        this.transform.scale = scale
+    }
+
+    /*
+     * Set translate position (clip space)
+     */
+    setPosition(x, y)
+    {
+        this.transform.position.x = x
+        this.transform.position.y = y
+    }
+
+    beforeDraw()
+    {
+        // Use the program
+        gl.useProgram(this.program)
+
+        // Bind the vertex buffer
+        gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexBuffer)
+
+        // Define how the position attribute will be read into the buffer
+        gl.vertexAttribPointer(this.attributes.position, 2, gl.FLOAT, false, 0, 0)
+
+        // Enable the position attribute
+        gl.enableVertexAttribArray(this.attributes.position)
+
+        // Set transform values (clip space) with uniforms
+        // ..
+        gl.uniform2fv(this.uniforms.translate, this.transform.position.toArray())
+        gl.uniform1f(this.uniforms.scale, this.transform.scale)
+
+        // Set color
+        gl.uniform3fv(this.uniforms.color, this.color)
     }
 
     draw()
     {
-        gl.useProgram(this.program)
-        gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexBuffer)
-
-        const stride = 5 * this.vertexBufferBPE
-        gl.vertexAttribPointer(this.attributes.position,
-            2,
-            gl.FLOAT,
-            false,
-            stride,
-            0
-        )
-        gl.vertexAttribPointer(this.attributes.color,
-            3,
-            gl.FLOAT,
-            false,
-            stride,
-            2 * this.vertexBufferBPE
-        )
-        gl.enableVertexAttribArray(this.attributes.position)
-        gl.enableVertexAttribArray(this.attributes.color)
-
-        // gl.vertexAttribPointer(this.attributes.color, 3, gl.FLOAT, false, 0, 2)
-        // gl.enableVertexAttribArray(this.attributes.color)
-        // gl.uniform3fv(this.uniforms.color, this.color)
+        this.beforeDraw()
 
         gl.drawArrays(gl.TRIANGLES, 0, 3)
     }
 }
 
+
+/*
+ * Init GL context and setup the scene
+ */
 function init()
 {
-    const canvas = document.getElementById("canvas")
+    let canvas = document.getElementById("canvas")
     window.gl = WebGLUtils.setupWebGL(canvas)
-    console.log(gl)
 
-    // Set the default value of the color buffer
     gl.clearColor(0.0, 0.0, 0.0, 1.0)
 
-    // Clear the color buffer at init to clear the canvas
-    gl.clear(gl.COLOR_BUFFER_BIT)
+    context.triangle = new Triangle([0.8, 0.2, 0.0])
 }
 
 /*
- * Draw all the points stored in the array
+ * Animation loop
+ * Called once per frame
+ *
+ * Schedule next frame
+ * Update the current state
+ * Call render routine
  */
-let triangle
-function draw()
+function animate()
 {
-    // Clear the color buffer before drawing all the points
+    // Schedule next frame
+    window.requestAnimationFrame(animate)
 
-    /**
-     *  Si Pi -> un demi tour donc 5 secondes pour un aller
-     *  Si PI * 2 -> un tour donc 5 secondes pour un aller retour
-     */
-    // console.log(lum)
-    triangle = new Triangle(0.5, [1, 0, 0])
-    // const triangle2 = new Triangle(0.2, [0, 0, 1])
-    // triangle2.draw()
-    loop()
+    // Update phase for animation (ramp from 0 to 1 during the period interval)
+    context.animation.phase = ((Date.now() / 1000) % context.animation.period) / context.animation.period
+
+    // Update the triangle position and scale from context params
+    // ..
+    context.triangle.setPosition(context.params.translateX, context.params.translateY)
+    context.triangle.setScale(context.params.scale)
+
+    render()
 }
-function loop() {
+
+/*
+ * Render routine, draw everything
+ */
+function render()
+{
+    // Clear the frame buffer
     gl.clear(gl.COLOR_BUFFER_BIT)
-    const lum = Math.sin((Date.now() * Math.PI * 2) / 5000) * 0.5 + 0.5
-    triangle.setAnimation(lum)
-    triangle.draw()
-    requestAnimationFrame(loop)
+
+    // Draw the triangle
+    context.triangle.draw()
 }
+
 init()
-draw(0)
+animate()
